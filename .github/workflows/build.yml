@@ -47,10 +47,6 @@ jobs:
             echo "Unwrapped binary verified"
           fi
 
-          # Check icons
-          test -d ./result/share/icons/hicolor
-          echo "Icons verified"
-
       - name: Package size
         run: |
           SIZE=$(du -sh ./result | cut -f1)

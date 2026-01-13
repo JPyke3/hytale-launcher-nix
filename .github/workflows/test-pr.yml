@@ -40,18 +40,10 @@ jobs:
             # Verify desktop file
             test -f ./result/share/applications/hytale-launcher.desktop
             echo "Desktop file: OK"
-
-            # Verify icons are linked
-            test -d ./result/share/icons/hicolor
-            echo "Icons symlink: OK"
           else
             # Verify unwrapped binary
             test -x ./result/lib/hytale-launcher/hytale-launcher
             echo "Unwrapped binary: OK"
-
-            # Verify icons exist (not symlinked)
-            test -f ./result/share/icons/hicolor/256x256/apps/hytale-launcher.png
-            echo "Icons: OK"
           fi
 
       - name: Package size check

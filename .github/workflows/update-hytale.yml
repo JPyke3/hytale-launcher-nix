@@ -64,7 +64,7 @@ jobs:
           body: |
             ## Automated Hytale Launcher Update
 
-            A new version of the Hytale Launcher has been detected via hash change.
+            A new version of the Hytale Launcher has been detected from the official manifest.
 
             ### Changes
             | Field | Old | New |
@@ -73,7 +73,7 @@ jobs:
             | Hash | `${{ steps.check.outputs.current_hash }}` | `${{ steps.check.outputs.new_hash }}` |
 
             ### Verification
-            - [x] New flatpak hash computed via `nix-prefetch-url`
+            - [x] Version and hash fetched from official manifest
             - [x] Build verified via `nix build`
             - [x] Package derivation updated
 

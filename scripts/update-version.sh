@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # === Configuration ===
-readonly FLATPAK_URL="https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-latest.flatpak"
+readonly MANIFEST_URL="https://launcher.hytale.com/version/release/launcher.json"
 readonly PACKAGE_FILE="package.nix"
 
 # Colors for output
@@ -27,33 +27,30 @@ get_current_version() {
     sed -n 's/.*version = "\([^"]*\)".*/\1/p' "$PACKAGE_FILE" | head -1
 }
 
-# === Hash Computation ===
-fetch_latest_hash() {
-    # Use nix-prefetch-url to get hash of the flatpak
-    log_info "Fetching latest flatpak from upstream..."
+# === Manifest Fetching ===
+fetch_manifest() {
+    # Fetch the version manifest with user-agent header
+    curl -sA "Mozilla/5.0" "$MANIFEST_URL" 2>/dev/null
+}
 
-    # Get the raw base32 hash first
-    local raw_hash
-    raw_hash=$(nix-prefetch-url --quiet "$FLATPAK_URL" 2>/dev/null)
+parse_manifest_version() {
+    local manifest="$1"
+    echo "$manifest" | grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/'
+}
 
-    if [ -z "$raw_hash" ]; then
-        log_error "Failed to fetch flatpak hash"
-        return 1
-    fi
+parse_manifest_hash() {
+    local manifest="$1"
+    # Extract the linux amd64 sha256 hash
+    echo "$manifest" | grep -A5 '"linux"' | grep -A2 '"amd64"' | grep '"sha256"' | sed 's/.*: *"\([^"]*\)".*/\1/'
+}
 
-    # Convert base32 to SRI format (sha256-base64)
-    local sri_hash
-    sri_hash=$(nix hash convert --hash-algo sha256 --to sri "$raw_hash" 2>/dev/null)
-
-    echo "$sri_hash"
+convert_hex_to_sri() {
+    local hex_hash="$1"
+    # Convert hex SHA256 to SRI format using nix hash convert
+    nix hash convert --hash-algo sha256 --to sri "sha256:$hex_hash" 2>/dev/null
 }
 
 # === Update Functions ===
-generate_new_version() {
-    # Date-based versioning: YYYY.MM.DD
-    date +"%Y.%m.%d"
-}
-
 update_package_hash() {
     local new_hash="$1"
     sed -i.bak "s|sha256 = \"sha256-[^\"]*\"|sha256 = \"$new_hash\"|" "$PACKAGE_FILE"
@@ -96,7 +93,7 @@ ensure_in_repository_root() {
 
 ensure_required_tools() {
     command -v nix >/dev/null 2>&1 || { log_error "nix is required"; exit 1; }
-    command -v nix-prefetch-url >/dev/null 2>&1 || { log_error "nix-prefetch-url is required"; exit 1; }
+    command -v curl >/dev/null 2>&1 || { log_error "curl is required"; exit 1; }
 }
 
 # === CLI Interface ===
@@ -104,17 +101,17 @@ print_usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-Hytale Launcher Nix package updater. Detects new versions via hash comparison.
+Hytale Launcher Nix package updater. Fetches version info from official manifest.
 
 Options:
   --check       Only check for updates, don't apply (exit 1 if update available)
-  --force       Force update even if hashes match
+  --force       Force update even if versions match
   --help        Show this help message
 
 Examples:
   $0              # Check and apply updates
   $0 --check      # CI mode: check only, exit 1 if update needed
-  $0 --force      # Force regenerate version (e.g., after flake.lock update)
+  $0 --force      # Force regenerate (e.g., after flake.lock update)
 EOF
 }
 
@@ -157,54 +154,45 @@ main() {
     log_info "Current version: $current_version"
     log_info "Current hash: $current_hash"
 
-    local latest_hash
-    latest_hash=$(fetch_latest_hash)
+    # Fetch and parse manifest
+    log_info "Fetching version manifest from upstream..."
+    local manifest
+    manifest=$(fetch_manifest)
 
-    if [ -z "$latest_hash" ]; then
-        log_error "Failed to fetch latest hash"
+    if [ -z "$manifest" ]; then
+        log_error "Failed to fetch manifest"
         exit 1
     fi
 
+    local latest_version
+    latest_version=$(parse_manifest_version "$manifest")
+    local latest_hex_hash
+    latest_hex_hash=$(parse_manifest_hash "$manifest")
+
+    if [ -z "$latest_version" ] || [ -z "$latest_hex_hash" ]; then
+        log_error "Failed to parse manifest"
+        exit 1
+    fi
+
+    local latest_hash
+    latest_hash=$(convert_hex_to_sri "$latest_hex_hash")
+
+    log_info "Latest version: $latest_version"
     log_info "Latest hash: $latest_hash"
 
-    # Compare hashes
-    if [ "$current_hash" = "$latest_hash" ] && [ "$force_update" = false ]; then
+    # Compare versions
+    if [ "$current_version" = "$latest_version" ] && [ "$force_update" = false ]; then
         log_info "Already up to date!"
         exit 0
     fi
 
-    local new_version
-    new_version=$(generate_new_version)
-
-    # Handle same-day updates (append .N suffix)
-    if [ "$current_hash" != "$latest_hash" ]; then
-        # Extract base date from current version (handle 2025.01.14 and 2025.01.14.2)
-        local current_base_date
-        current_base_date=$(echo "$current_version" | grep -oE '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}')
-
-        if [ "$current_base_date" = "$new_version" ]; then
-            # Same day - need suffix
-            local current_suffix
-            current_suffix=$(echo "$current_version" | grep -oE '\.[0-9]+$' | tr -d '.' || echo "0")
-
-            if [ -z "$current_suffix" ] || [ "$current_suffix" = "0" ]; then
-                # First update today was base version, next is .2
-                new_version="${new_version}.2"
-            else
-                # Increment suffix
-                local next_suffix=$((current_suffix + 1))
-                new_version="${new_version}.${next_suffix}"
-            fi
-        fi
-    fi
-
-    log_info "Update available: $current_version ($current_hash) -> $new_version ($latest_hash)"
+    log_info "Update available: $current_version -> $latest_version"
 
     if [ "$check_only" = true ]; then
         # Output for GitHub Actions
         echo "UPDATE_AVAILABLE=true"
         echo "CURRENT_VERSION=$current_version"
-        echo "NEW_VERSION=$new_version"
+        echo "NEW_VERSION=$latest_version"
         echo "CURRENT_HASH=$current_hash"
         echo "NEW_HASH=$latest_hash"
         exit 1  # Non-zero indicates update available
@@ -212,7 +200,7 @@ main() {
 
     # Apply updates
     log_info "Applying update..."
-    update_package_version "$new_version"
+    update_package_version "$latest_version"
     update_package_hash "$latest_hash"
 
     # Verify build
@@ -224,7 +212,7 @@ main() {
 
     cleanup_backups
 
-    log_info "Successfully updated from $current_version to $new_version"
+    log_info "Successfully updated from $current_version to $latest_version"
 
     # Update flake.lock
     log_info "Updating flake.lock..."
