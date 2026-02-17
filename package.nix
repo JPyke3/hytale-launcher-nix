@@ -2,8 +2,8 @@
 
 let
   # === AUTO-UPDATE MARKERS - DO NOT MODIFY FORMAT ===
-  version = "2026.02.16-4af6ef9";
-  sha256 = "sha256-kA6mUFpemj+uUAX9mazDo/6PPONWjqRgmYUYJC1O3xU=";
+  version = "2026.02.17-48a5aed";
+  sha256 = "sha256-R/eumJ1TOhHitgwYwSNxT91E+AtEyE6JfbsbdIq9Xpk=";
   # === END AUTO-UPDATE MARKERS ===
 
   pname = "hytale-launcher";
