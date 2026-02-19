@@ -46,12 +46,12 @@ let
     runtimeDependencies = with pkgs; [
       libGL
       libxkbcommon
-      xorg.libX11
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXext
-      xorg.libXfixes
-      xorg.libXrandr
+      libx11
+      libxcomposite
+      libxdamage
+      libxext
+      libxfixes
+      libxrandr
     ];
 
     # No build phase needed - just unpack and install
@@ -110,18 +110,18 @@ let
       egl-wayland
 
       # X11 (SDL3 dlopens these)
-      xorg.libX11
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXext
-      xorg.libXfixes
-      xorg.libXrandr
-      xorg.libXcursor
-      xorg.libXi
-      xorg.libxcb
-      xorg.libXScrnSaver
-      xorg.libXinerama
-      xorg.libXxf86vm
+      libx11
+      libxcomposite
+      libxdamage
+      libxext
+      libxfixes
+      libxrandr
+      libxcursor
+      libxi
+      libxcb
+      libxScrnSaver
+      libxinerama
+      libxxf86vm
 
       # Wayland (SDL3 can use Wayland backend)
       wayland
