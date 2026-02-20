@@ -205,7 +205,10 @@ Keywords=hytale;game;launcher;hypixel;
 StartupWMClass=com.hypixel.HytaleLauncher
 EOF
 
-    '';
+  # Install icon
+  mkdir -p $out/share/icons/hicolor/256x256/apps
+  cp ${../hytale-launcher.png} $out/share/icons/hicolor/256x256/apps/hytale-launcher.png
+'';
 
     meta = with pkgs.lib; {
       description = "Official launcher for Hytale game";
