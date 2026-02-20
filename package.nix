@@ -207,7 +207,7 @@ EOF
 
   # Install icon
   mkdir -p $out/share/icons/hicolor/256x256/apps
-  cp ${../hytale-launcher.png} $out/share/icons/hicolor/256x256/apps/hytale-launcher.png
+  cp ${./hytale-launcher.png} $out/share/icons/hicolor/256x256/apps/hytale-launcher.png
 '';
 
     meta = with pkgs.lib; {
