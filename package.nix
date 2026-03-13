@@ -9,6 +9,23 @@ let
   pname = "hytale-launcher";
   downloadUrl = "https://launcher.hytale.com/builds/release/linux/amd64/hytale-launcher-${version}.zip";
 
+  hytale-icon = pkgs.stdenv.mkDerivation {
+    name = "hytale-icon";
+    src = pkgs.fetchurl {
+      url = "https://hytale.com/images/logo-h.webp";
+      sha256 = "sha256-VH5QsLTWl0TOj4aHwGYLonrJI27PlQkrnbTBNuzACWk=";
+    };
+    nativeBuildInputs = [ pkgs.imagemagick ];
+    unpackPhase = "true";
+    buildPhase = ''
+      convert $src hytale-launcher.png
+    '';
+    installPhase = ''
+      mkdir -p $out
+      cp hytale-launcher.png $out/
+    '';
+  };
+
   # Unwrapped derivation - extracts and patches the binary
   hytale-launcher-unwrapped = pkgs.stdenv.mkDerivation {
     pname = "${pname}-unwrapped";
@@ -18,6 +35,8 @@ let
       url = downloadUrl;
       inherit sha256;
     };
+
+    
 
     nativeBuildInputs = with pkgs; [
       autoPatchelfHook
@@ -46,12 +65,12 @@ let
     runtimeDependencies = with pkgs; [
       libGL
       libxkbcommon
-      xorg.libX11
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXext
-      xorg.libXfixes
-      xorg.libXrandr
+      libx11
+      libxcomposite
+      libxdamage
+      libxext
+      libxfixes
+      libxrandr
     ];
 
     # No build phase needed - just unpack and install
@@ -110,18 +129,18 @@ let
       egl-wayland
 
       # X11 (SDL3 dlopens these)
-      xorg.libX11
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXext
-      xorg.libXfixes
-      xorg.libXrandr
-      xorg.libXcursor
-      xorg.libXi
-      xorg.libxcb
-      xorg.libXScrnSaver
-      xorg.libXinerama
-      xorg.libXxf86vm
+      libx11
+      libxcomposite
+      libxdamage
+      libxext
+      libxfixes
+      libxrandr
+      libxcursor
+      libxi
+      libxcb
+      libxscrnsaver
+      libxinerama
+      libxxf86vm
 
       # Wayland (SDL3 can use Wayland backend)
       wayland
@@ -205,6 +224,8 @@ Keywords=hytale;game;launcher;hypixel;
 StartupWMClass=com.hypixel.HytaleLauncher
 EOF
 
+    mkdir -p $out/share/icons/hicolor/256x256/apps
+    cp ${hytale-icon}/hytale-launcher.png $out/share/icons/hicolor/256x256/apps/hytale-launcher.png
     '';
 
     meta = with pkgs.lib; {
