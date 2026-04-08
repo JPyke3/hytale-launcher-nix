@@ -46,12 +46,12 @@ let
     runtimeDependencies = with pkgs; [
       libGL
       libxkbcommon
-      xorg.libX11
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXext
-      xorg.libXfixes
-      xorg.libXrandr
+      libX11
+      libXcomposite
+      libXdamage
+      libXext
+      libXfixes
+      libXrandr
     ];
 
     # No build phase needed - just unpack and install
@@ -110,18 +110,18 @@ let
       egl-wayland
 
       # X11 (SDL3 dlopens these)
-      xorg.libX11
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXext
-      xorg.libXfixes
-      xorg.libXrandr
-      xorg.libXcursor
-      xorg.libXi
-      xorg.libxcb
-      xorg.libXScrnSaver
-      xorg.libXinerama
-      xorg.libXxf86vm
+      libX11
+      libXcomposite
+      libXdamage
+      libXext
+      libXfixes
+      libXrandr
+      libXcursor
+      libXi
+      libxcb
+      libXScrnSaver
+      libXinerama
+      libXxf86vm
 
       # Wayland (SDL3 can use Wayland backend)
       wayland
@@ -205,7 +205,10 @@ Keywords=hytale;game;launcher;hypixel;
 StartupWMClass=com.hypixel.HytaleLauncher
 EOF
 
-    '';
+  # Install icon
+  mkdir -p $out/share/icons/hicolor/256x256/apps
+  cp ${./hytale-launcher.png} $out/share/icons/hicolor/256x256/apps/hytale-launcher.png
+'';
 
     meta = with pkgs.lib; {
       description = "Official launcher for Hytale game";
