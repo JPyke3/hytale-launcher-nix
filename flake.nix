@@ -2,11 +2,16 @@
   description = "Hytale Launcher - Official launcher for Hytale game";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs.flake-compat = {
+    url = "github:NixOS/flake-compat";
+    flake = false;
+  };
 
   outputs =
     {
       self,
       nixpkgs,
+      flake-compat,
     }:
     let
       inherit (nixpkgs) lib;
