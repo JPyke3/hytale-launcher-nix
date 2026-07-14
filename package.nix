@@ -161,8 +161,9 @@ let
       LAUNCHER_BIN="$LAUNCHER_DIR/hytale-launcher"
       BUNDLED_HASH_FILE="$LAUNCHER_DIR/.bundled_hash"
       BUNDLED_BIN="${hytale-launcher-unwrapped}/lib/hytale-launcher/hytale-launcher"
+      LAUNCHER_TMP_DIR="$LAUNCHER_DIR/.tmp"
 
-      mkdir -p "$LAUNCHER_DIR"
+      mkdir -p "$LAUNCHER_DIR" "$LAUNCHER_TMP_DIR"
 
       # Compute hash of bundled binary to detect Nix package updates
       BUNDLED_HASH=$(sha256sum "$BUNDLED_BIN" | cut -d" " -f1)
@@ -185,6 +186,11 @@ let
 
       # SSL certificates
       export SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt
+
+      # Keep patch staging on the same filesystem as launcher data
+      # XDG_CACHE_HOME takes precedence over TMPDIR in the launcher
+      unset XDG_CACHE_HOME
+      export TMPDIR="$LAUNCHER_TMP_DIR"
 
       exec "$LAUNCHER_BIN" "$@"
     '';
