@@ -161,7 +161,7 @@ let
       LAUNCHER_BIN="$LAUNCHER_DIR/hytale-launcher"
       BUNDLED_HASH_FILE="$LAUNCHER_DIR/.bundled_hash"
       BUNDLED_BIN="${hytale-launcher-unwrapped}/lib/hytale-launcher/hytale-launcher"
-      LAUNCHER_TMP_DIR="$LAUNCHER_DIR/.tmp"
+      LAUNCHER_TMP_DIR="$LAUNCHER_DIR/.nix-tmp"
 
       mkdir -p "$LAUNCHER_DIR" "$LAUNCHER_TMP_DIR"
 
