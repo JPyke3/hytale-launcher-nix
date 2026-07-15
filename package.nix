@@ -1,6 +1,17 @@
 { pkgs }:
 
 let
+  hytale-icon-extractor = pkgs.runCommand "hytale-icon-extractor" {
+    nativeBuildInputs = [
+      pkgs.rustc
+      pkgs.stdenv.cc
+    ];
+  } ''
+    mkdir -p $out/bin
+    rustc --edition=2021 -O ${./tools/extract-icon.rs} \
+      -o $out/bin/hytale-icon-extractor
+  '';
+
   # === AUTO-UPDATE MARKERS - DO NOT MODIFY FORMAT ===
   version = "2026.07.07-325d709";
   sha256 = "sha256-qC5q+5DRkl0jqmPRdWlcZ9n0sYKQdwmPncL/It9FhMw=";
@@ -21,6 +32,7 @@ let
 
     nativeBuildInputs = with pkgs; [
       autoPatchelfHook
+      hytale-icon-extractor
       unzip
     ];
 
@@ -62,6 +74,15 @@ let
 
       mkdir -p $out/lib/hytale-launcher
       install -m755 hytale-launcher $out/lib/hytale-launcher/
+
+      if hytale-icon-extractor hytale-launcher hytale-launcher.png \
+        && test -s hytale-launcher.png; then
+        install -Dm644 hytale-launcher.png \
+          $out/share/icons/hicolor/256x256/apps/hytale-launcher.png
+      else
+        echo "warning: launcher icon extraction failed; continuing without an icon" >&2
+        rm -f hytale-launcher.png
+      fi
 
       runHook postInstall
     '';
@@ -210,6 +231,13 @@ Categories=Game;
 Keywords=hytale;game;launcher;hypixel;
 StartupWMClass=com.hypixel.HytaleLauncher
 EOF
+
+      # Expose the icon when the bundled launcher contained one.
+      if [ -d ${hytale-launcher-unwrapped}/share/icons/hicolor ]; then
+        mkdir -p $out/share/icons
+        ln -s ${hytale-launcher-unwrapped}/share/icons/hicolor \
+          $out/share/icons/hicolor
+      fi
 
     '';
 
