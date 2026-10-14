@@ -26,7 +26,10 @@ let
 
     unpackPhase = ''
       runHook preUnpack
-      unzip $src -d .
+
+      # Ignore exit code 1 (warning only, processing finished)
+      unzip $src -d . || [ $? -eq 1 ]
+
       runHook postUnpack
     '';
 
