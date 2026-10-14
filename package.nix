@@ -2,8 +2,8 @@
 
 let
   # === AUTO-UPDATE MARKERS - DO NOT MODIFY FORMAT ===
-  version = "2026.09.28-87cfbb7";
-  sha256 = "sha256-MqoHh9LPN0ZMtxAPeixsHgqZbnDj+H1u4Wy4okZvVTk=";
+  version = "2026.10.09-4e41671";
+  sha256 = "sha256-7VKqz2ymQLvgBLbq5pmVju7cX8E+r5EgtY48Mk5dnf8=";
   # === END AUTO-UPDATE MARKERS ===
 
   pname = "hytale-launcher";
@@ -26,7 +26,10 @@ let
 
     unpackPhase = ''
       runHook preUnpack
-      unzip $src -d .
+
+      # Ignore exit code 1 (warning only, processing finished)
+      unzip $src -d . || [ $? -eq 1 ]
+
       runHook postUnpack
     '';
 
